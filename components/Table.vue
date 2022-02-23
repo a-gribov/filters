@@ -66,7 +66,6 @@
 import Vue, { PropType } from 'vue'
 import { mapActions, mapGetters } from 'vuex'
 import { VueSlideToggle } from 'vue-slide-toggle'
-import { set } from 'vue/types/umd'
 
 export type Headings = {
   readonly title: string
@@ -95,15 +94,14 @@ export default {
   data() {
     return {
       openFilterId: '-1',
-      activeFilters: {
-        artist: [] as string[],
-        album: [] as string[],
-      },
       preparedAllProjects: [] as Array<any>,
       tableDataNew: [] as Array<any>,
     }
   },
   computed: {
+    ...mapGetters({
+      activeFilters: 'filters/getActiveFilters',
+    }),
     artistF(): any {
       const artistFromList = this.tableData.list.map((x: TableItem) => x.artist)
       const uniqueArtist = Array.from(new Set(artistFromList))
@@ -176,6 +174,12 @@ export default {
     this.removeListeners()
   },
   methods: {
+    ...mapActions({
+      saveActiveFiltersInStore: 'filters/setActiveFilters',
+    }),
+    saveActiveFilters(filterObject: any): void {
+      this.saveActiveFiltersInStore(filterObject)
+    },
     addListeners(): void {
       document.addEventListener('click', this.checkClickTarget)
     },
@@ -214,18 +218,20 @@ export default {
     },
     setFilter(filterId: string, valueName: string): void {
       const id = filterId as 'album' | 'artist'
-      if (this.activeFilters[id].length === 0) {
-        this.activeFilters[id].push(valueName)
+      const localActiveFilters = JSON.parse(JSON.stringify(this.activeFilters))
+
+      if (localActiveFilters[id].length === 0) {
+        localActiveFilters[id].push(valueName)
       } else {
-        const isInStore = this.activeFilters[id].includes(valueName)
+        const isInStore = localActiveFilters[id].includes(valueName)
         if (isInStore) {
-          const index = this.activeFilters[id].indexOf(valueName)
-          this.activeFilters[id].splice(index, 1)
+          const index = localActiveFilters[id].indexOf(valueName)
+          localActiveFilters[id].splice(index, 1)
         } else {
-          this.activeFilters[id].push(valueName)
+          localActiveFilters[id].push(valueName)
         }
       }
-      //добавить стор
+      this.saveActiveFilters(localActiveFilters)
     },
   },
   mounted() {
