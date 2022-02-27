@@ -96,6 +96,10 @@ export default {
       openFilterId: '-1',
       preparedAllProjects: [] as Array<any>,
       tableDataNew: [] as Array<any>,
+      routeActiveFilters: {
+        artist: [],
+        album: [],
+      },
     }
   },
   computed: {
@@ -145,17 +149,21 @@ export default {
     },
 
     filteredPreparedProjects(): ReadonlyArray<any> {
-      const filtersObj = JSON.parse(JSON.stringify(this.activeFilters)) as any
+      const filtersObj =
+        this.activeFilters.album.length > 0 ||
+        this.activeFilters.artist.length > 0
+          ? this.activeFilters
+          : this.routeActiveFilters
 
       const filteredBySelection = this.preparedAllProjects.filter((x: any) => {
         const isAlbumFilter =
-          filtersObj.album.length === 0
+          filtersObj.album?.length === 0
             ? true
-            : filtersObj.album.includes(x.album)
+            : filtersObj.album?.includes(x.album)
         const isArtistFilter =
-          filtersObj.artist.length === 0
+          filtersObj.artist?.length === 0
             ? true
-            : filtersObj.artist.includes(x.artist)
+            : filtersObj.artist?.includes(x.artist)
 
         const isTotallyOk = isAlbumFilter && isArtistFilter
 
@@ -166,6 +174,16 @@ export default {
     },
   },
   created() {
+    const routeQuery = this.$route.query as { album: []; artist: [] }
+    Object.keys(this.$route.query).forEach((key) => {
+      const id = key as 'album' | 'artist'
+      if (!Array.isArray(routeQuery[id])) {
+        this.routeActiveFilters[id].push(routeQuery[key])
+      } else {
+        this.routeActiveFilters = routeQuery
+      }
+    })
+
     if (process.browser) {
       this.addListeners()
     }
@@ -188,7 +206,6 @@ export default {
     },
     checkClickTarget(event: MouseEvent): void {
       if (!event.target) {
-        console.warn('не обнаружен event.target в TitleItem.vue')
         return
       }
 
@@ -232,6 +249,8 @@ export default {
         }
       }
       this.saveActiveFilters(localActiveFilters)
+      this.$router.push({ path: '', query: localActiveFilters })
+      this.routeActiveFilters = localActiveFilters
     },
   },
   mounted() {
