@@ -26,7 +26,7 @@
                     <label>
                       <input
                         type="checkbox"
-                        name="project-filters"
+                        name="object-filters"
                         class="visually-hidden select-item"
                         :value="filter"
                         :checked="filter.isChecked"
@@ -46,16 +46,11 @@
           </div>
         </div>
         <div class="rows">
-          <div
-            v-for="(object, index) in filteredPreparedProjects"
+          <TableRow
+            v-for="(object, index) in filteredPreparedObjects"
             :key="index"
-            class="row"
-          >
-            <div class="col">{{ object.artist }}</div>
-            <div class="col">{{ object.name }}</div>
-            <div class="col">{{ object.album }}</div>
-            <div class="col">{{ object.duration }}</div>
-          </div>
+            v-bind="object"
+          />
         </div>
       </div>
     </div>
@@ -64,9 +59,10 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
-
+import TableRow from './TableRow'
 export default {
   name: 'Table',
+  components: { TableRow },
   props: {
     tableData: {
       type: Object,
@@ -76,7 +72,7 @@ export default {
   data() {
     return {
       openFilterId: '-1',
-      preparedAllProjects: [],
+      preparedAllObjects: [],
       tableDataNew: [],
       routeActiveFilters: {
         artist: [],
@@ -98,7 +94,6 @@ export default {
       const uniqueAlbum = Array.from(new Set(albumFromList))
       return uniqueAlbum.sort((a, b) => a.localeCompare(b))
     },
-
     filtersData() {
       const data = [
         {
@@ -130,14 +125,14 @@ export default {
       return data
     },
 
-    filteredPreparedProjects() {
+    filteredPreparedObjects() {
       const filtersObj =
         this.activeFilters.album.length > 0 ||
         this.activeFilters.artist.length > 0
           ? this.activeFilters
           : this.routeActiveFilters
 
-      const filteredBySelection = this.preparedAllProjects.filter((x) => {
+      const filteredBySelection = this.preparedAllObjects.filter((x) => {
         const isAlbumFilter =
           filtersObj.album?.length === 0
             ? true
@@ -151,7 +146,6 @@ export default {
 
         return isTotallyOk
       })
-
       return filteredBySelection
     },
   },
@@ -164,7 +158,6 @@ export default {
         this.routeActiveFilters = routeQuery
       }
     })
-
     if (process.browser) {
       this.addListeners()
     }
@@ -189,10 +182,8 @@ export default {
       if (!event.target) {
         return
       }
-
       let targetElement = event.target
       let isOutside = true
-
       do {
         if (
           targetElement.classList &&
@@ -201,10 +192,8 @@ export default {
           isOutside = false
           return
         }
-
         targetElement = targetElement.parentNode
       } while (targetElement)
-
       if (isOutside) {
         this.openFilterId = '-1'
       }
@@ -216,7 +205,6 @@ export default {
     },
     setFilter(id, valueName) {
       const localActiveFilters = JSON.parse(JSON.stringify(this.activeFilters))
-
       if (localActiveFilters[id].length === 0) {
         localActiveFilters[id].push(valueName)
       } else {
@@ -236,13 +224,12 @@ export default {
   mounted() {
     this.$nextTick(() => {
       this.tableDataNew = this.tableData.list.slice()
-
-      this.preparedAllProjects = this.tableDataNew.map((x) => {
-        const preparedProject = {
+      this.preparedAllObjects = this.tableDataNew.map((x) => {
+        const preparedObject = {
           ...x,
           allFilters: [x.album, x.artist],
         }
-        return preparedProject
+        return preparedObject
       })
     })
   },
@@ -271,14 +258,6 @@ export default {
   padding-top: 4rem;
   display: flex;
   flex-direction: column;
-}
-.row {
-  display: flex;
-  margin-top: 1.5rem;
-  justify-content: space-between;
-}
-.col {
-  width: 20%;
 }
 
 .title-item {
