@@ -62,40 +62,22 @@
   </div>
 </template>
 
-<script lang="ts">
-import Vue, { PropType } from 'vue'
+<script>
 import { mapActions, mapGetters } from 'vuex'
-import { VueSlideToggle } from 'vue-slide-toggle'
-
-export type Headings = {
-  readonly title: string
-}
-export type TableItem = {
-  readonly artist: string
-  readonly name: string
-  readonly album: string
-  readonly duration: string
-}
-
-export type TableData = {
-  readonly headings: ReadonlyArray<Headings>
-  readonly list: ReadonlyArray<TableItem>
-}
 
 export default {
   name: 'Table',
-  components: { VueSlideToggle },
   props: {
     tableData: {
-      type: Object as PropType<TableData>,
+      type: Object,
       required: true,
     },
   },
   data() {
     return {
       openFilterId: '-1',
-      preparedAllProjects: [] as Array<any>,
-      tableDataNew: [] as Array<any>,
+      preparedAllProjects: [],
+      tableDataNew: [],
       routeActiveFilters: {
         artist: [],
         album: [],
@@ -106,23 +88,23 @@ export default {
     ...mapGetters({
       activeFilters: 'filters/getActiveFilters',
     }),
-    artistF(): any {
-      const artistFromList = this.tableData.list.map((x: TableItem) => x.artist)
+    artistF() {
+      const artistFromList = this.tableData.list.map((x) => x.artist)
       const uniqueArtist = Array.from(new Set(artistFromList))
       return uniqueArtist.sort((a, b) => a.localeCompare(b))
     },
-    albumF(): any {
-      const albumFromList = this.tableData.list.map((x: TableItem) => x.album)
+    albumF() {
+      const albumFromList = this.tableData.list.map((x) => x.album)
       const uniqueAlbum = Array.from(new Set(albumFromList))
       return uniqueAlbum.sort((a, b) => a.localeCompare(b))
     },
 
-    filtersData(): ReadonlyArray<any> {
+    filtersData() {
       const data = [
         {
           id: this.tableData.headings[0],
           title: this.tableData.headings[0],
-          options: this.artistF.map((x: string) => ({
+          options: this.artistF.map((x) => ({
             title: x,
             isChecked: false,
           })),
@@ -134,7 +116,7 @@ export default {
         {
           id: this.tableData.headings[2],
           title: this.tableData.headings[2],
-          options: this.albumF.map((x: string) => ({
+          options: this.albumF.map((x) => ({
             title: x,
             isChecked: false,
           })),
@@ -148,14 +130,14 @@ export default {
       return data
     },
 
-    filteredPreparedProjects(): ReadonlyArray<any> {
+    filteredPreparedProjects() {
       const filtersObj =
         this.activeFilters.album.length > 0 ||
         this.activeFilters.artist.length > 0
           ? this.activeFilters
           : this.routeActiveFilters
 
-      const filteredBySelection = this.preparedAllProjects.filter((x: any) => {
+      const filteredBySelection = this.preparedAllProjects.filter((x) => {
         const isAlbumFilter =
           filtersObj.album?.length === 0
             ? true
@@ -174,11 +156,10 @@ export default {
     },
   },
   created() {
-    const routeQuery = this.$route.query as { album: []; artist: [] }
+    const routeQuery = this.$route.query || { album: [], artist: [] }
     Object.keys(this.$route.query).forEach((key) => {
-      const id = key as 'album' | 'artist'
-      if (!Array.isArray(routeQuery[id])) {
-        this.routeActiveFilters[id].push(routeQuery[key])
+      if (!Array.isArray(routeQuery[key])) {
+        this.routeActiveFilters[key].push(routeQuery[key])
       } else {
         this.routeActiveFilters = routeQuery
       }
@@ -195,21 +176,21 @@ export default {
     ...mapActions({
       saveActiveFiltersInStore: 'filters/setActiveFilters',
     }),
-    saveActiveFilters(filterObject: any): void {
+    saveActiveFilters(filterObject) {
       this.saveActiveFiltersInStore(filterObject)
     },
-    addListeners(): void {
+    addListeners() {
       document.addEventListener('click', this.checkClickTarget)
     },
-    removeListeners(): void {
+    removeListeners() {
       document.removeEventListener('click', this.checkClickTarget)
     },
-    checkClickTarget(event: MouseEvent): void {
+    checkClickTarget(event) {
       if (!event.target) {
         return
       }
 
-      let targetElement = event.target as HTMLElement
+      let targetElement = event.target
       let isOutside = true
 
       do {
@@ -221,20 +202,19 @@ export default {
           return
         }
 
-        targetElement = targetElement.parentNode as HTMLElement
+        targetElement = targetElement.parentNode
       } while (targetElement)
 
       if (isOutside) {
         this.openFilterId = '-1'
       }
     },
-    openFilter(id: string) {
+    openFilter(id) {
       this.openFilterId === id
         ? (this.openFilterId = '-1')
         : (this.openFilterId = id)
     },
-    setFilter(filterId: string, valueName: string): void {
-      const id = filterId as 'album' | 'artist'
+    setFilter(id, valueName) {
       const localActiveFilters = JSON.parse(JSON.stringify(this.activeFilters))
 
       if (localActiveFilters[id].length === 0) {
@@ -257,8 +237,8 @@ export default {
     this.$nextTick(() => {
       this.tableDataNew = this.tableData.list.slice()
 
-      this.preparedAllProjects = this.tableDataNew.map((x: any) => {
-        const preparedProject: any = {
+      this.preparedAllProjects = this.tableDataNew.map((x) => {
+        const preparedProject = {
           ...x,
           allFilters: [x.album, x.artist],
         }
